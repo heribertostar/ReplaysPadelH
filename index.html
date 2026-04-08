@@ -38,6 +38,23 @@ body {
 const API_KEY = "AIzaSyDihD7Bc1KaWhL1f5JhEMYNDGSCM9ZVycI";
 const FOLDER_ID = "1fDE2bE_dC39VU7k_mCTHMYHtmYbKFIJc";
 
+let ultimoVideo = null;
+
+// 🔍 Verificar si el video ya está listo
+function videoListo(id) {
+  return new Promise((resolve) => {
+    const test = document.createElement("iframe");
+
+    test.src = `https://drive.google.com/file/d/${id}/preview`;
+
+    test.onload = () => resolve(true);
+    test.onerror = () => resolve(false);
+
+    setTimeout(() => resolve(false), 3000);
+  });
+}
+
+// 🚀 Cargar videos
 async function loadVideos() {
 
   const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'video/'&key=${API_KEY}&fields=files(id,name,createdTime)`;
@@ -47,9 +64,16 @@ async function loadVideos() {
 
   let videos = data.files;
 
-  // Ordenar por fecha DESC (más recientes primero)
+  // Ordenar por fecha DESC
   videos.sort((a,b)=> new Date(b.createdTime) - new Date(a.createdTime));
 
+  // Detectar nuevo video
+  if (videos.length > 0 && videos[0].id !== ultimoVideo) {
+    ultimoVideo = videos[0].id;
+    console.log("🎬 Nuevo replay detectado");
+  }
+
+  // Agrupar por día
   let grouped = {};
 
   videos.forEach(v => {
@@ -62,11 +86,13 @@ async function loadVideos() {
     grouped[date].push({...v, time});
   });
 
-  render(grouped);
+  await render(grouped);
 }
 
-function render(grouped){
+// 🎬 Render (solo videos listos)
+async function render(grouped){
   const app = document.getElementById("app");
+  app.innerHTML = "";
 
   for(let date in grouped){
     let section = document.createElement("div");
@@ -74,26 +100,34 @@ function render(grouped){
 
     section.innerHTML = `<h2>${date}</h2>`;
 
-    grouped[date].forEach(v=>{
+    for (let v of grouped[date]) {
+
+      let listo = await videoListo(v.id);
+
+      if (!listo) continue; // ❌ no mostrar si no está listo
+
       let card = document.createElement("div");
       card.className = "card";
 
       card.innerHTML = `
         <div class="time">🕒 ${v.time}</div>
         <div>${v.name}</div>
-        <div class="video">
-          <iframe src="https://drive.google.com/file/d/${v.id}/preview"></iframe>
-        </div>
+        <iframe src="https://drive.google.com/file/d/${v.id}/preview" allow="autoplay"></iframe>
       `;
 
       section.appendChild(card);
-    });
+    }
 
     app.appendChild(section);
   }
 }
 
+// 🔄 Auto refresh cada 5s
+setInterval(loadVideos, 5000);
+
+// 🔥 Primera carga
 loadVideos();
+
 </script>
 
 </body>
