@@ -32,21 +32,27 @@ function guardarReplay() {
   const ws = new WebSocket("ws://192.168.1.114:4455");
 
   ws.onopen = () => {
-    ws.send(JSON.stringify({
-      op: 6,
-      d: {
-        requestType: "SaveReplayBuffer",
-        requestId: "replay1"
-      }
-    }));
+    console.log("Conectado a OBS");
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log("Mensaje OBS:", data);
+
+    // Cuando OBS manda el Hello (op:0), ya podemos mandar comando
+    if (data.op === 0) {
+      ws.send(JSON.stringify({
+        op: 6,
+        d: {
+          requestType: "SaveReplayBuffer",
+          requestId: "replay1"
+        }
+      }));
+    }
   };
 
   ws.onerror = () => {
     alert("❌ No conecta con OBS");
-  };
-
-  ws.onmessage = (msg) => {
-    console.log(msg.data);
   };
 }
 </script>
