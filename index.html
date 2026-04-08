@@ -40,20 +40,6 @@ const FOLDER_ID = "1fDE2bE_dC39VU7k_mCTHMYHtmYbKFIJc";
 
 let ultimoVideo = null;
 
-// 🔍 Verificar si el video ya está listo
-function videoListo(id) {
-  return new Promise((resolve) => {
-    const test = document.createElement("iframe");
-
-    test.src = `https://drive.google.com/file/d/${id}/preview`;
-
-    test.onload = () => resolve(true);
-    test.onerror = () => resolve(false);
-
-    setTimeout(() => resolve(false), 3000);
-  });
-}
-
 // 🚀 Cargar videos
 async function loadVideos() {
 
@@ -67,80 +53,56 @@ async function loadVideos() {
   // Ordenar por fecha DESC
   videos.sort((a,b)=> new Date(b.createdTime) - new Date(a.createdTime));
 
-  // Detectar nuevo video
+  // 🔥 SOLO actualizar si hay nuevo video
   if (videos.length > 0 && videos[0].id !== ultimoVideo) {
     ultimoVideo = videos[0].id;
     console.log("🎬 Nuevo replay detectado");
+
+    render(videos);
   }
-
-  // Agrupar por día
-  let grouped = {};
-
-  videos.forEach(v => {
-    let d = new Date(v.createdTime);
-
-    let date = d.toLocaleDateString();
-    let time = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-
-    if(!grouped[date]) grouped[date] = [];
-    grouped[date].push({...v, time});
-  });
-
-  await render(grouped);
 }
 
-// 🎬 Render (solo videos listos)
-async function render(grouped){
+// 🎬 Render limpio
+function render(videos){
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  for(let date in grouped){
-    let section = document.createElement("div");
-    section.className = "section";
+  videos.forEach(v => {
+    let d = new Date(v.createdTime);
+    let time = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
-    section.innerHTML = `<h2>${date}</h2>`;
+    let card = document.createElement("div");
+    card.className = "card";
 
-    for (let v of grouped[date]) {
+    let loading = document.createElement("div");
+    loading.innerText = "⏳ Procesando video...";
 
-      let card = document.createElement("div");
-      card.className = "card";
+    let iframe = document.createElement("iframe");
+    iframe.src = `https://drive.google.com/file/d/${v.id}/preview`;
+    iframe.style.display = "none";
 
-      // 👇 mensaje mientras carga
-      let loading = document.createElement("div");
-      loading.innerText = "⏳ Procesando video...";
-      loading.style.marginBottom = "10px";
+    iframe.onload = () => {
+      loading.remove();
+      iframe.style.display = "block";
+    };
 
-      let iframe = document.createElement("iframe");
-      iframe.src = `https://drive.google.com/file/d/${v.id}/preview`;
-      iframe.style.display = "none"; // oculto al inicio
+    card.innerHTML = `
+      <div class="time">🕒 ${time}</div>
+      <div>${v.name}</div>
+    `;
 
-      // 👇 cuando ya carga → mostrar
-      iframe.onload = () => {
-        loading.remove();
-        iframe.style.display = "block";
-      };
+    card.appendChild(loading);
+    card.appendChild(iframe);
 
-      card.innerHTML = `
-        <div class="time">🕒 ${v.time}</div>
-        <div>${v.name}</div>
-      `;
-
-      card.appendChild(loading);
-      card.appendChild(iframe);
-
-      section.appendChild(card);
-    }
-
-    app.appendChild(section);
-  }
+    app.appendChild(card);
+  });
 }
 
-// 🔄 Auto refresh cada 5s
+// 🔄 revisar cada 5s (pero sin re-render innecesario)
 setInterval(loadVideos, 5000);
 
-// 🔥 Primera carga
+// primera carga
 loadVideos();
-
 </script>
 
 </body>
