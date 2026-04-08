@@ -108,6 +108,41 @@ iframe {
   transform: scale(0.97);
   background: #cc2f26;
 }
+
+/* GRID RESPONSIVE */
+#app {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+/* TABLET */
+@media (min-width: 600px) {
+  #app {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* DESKTOP */
+@media (min-width: 1000px) {
+  #app {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* QUE LAS CARDS SE ADAPTEN */
+.card {
+  width: 100%;
+}
+
+/* AJUSTE DE VIDEO EN GRID */
+iframe {
+  height: 200px;
+}
+
+.latest iframe {
+  height: 240px;
+}
   
 </style>
 </head>
