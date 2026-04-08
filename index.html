@@ -12,7 +12,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* HEADER tipo app */
 .header {
   position: sticky;
   top: 0;
@@ -23,33 +22,31 @@ body {
   border-bottom: 1px solid #222;
 }
 
-/* CONTENEDOR */
-#app {
+.section {
   padding: 10px;
 }
 
-/* CARD estilo Grabala */
+.section-title {
+  font-size: 14px;
+  color: #aaa;
+  margin: 10px 5px;
+}
+
+/* CARD */
 .card {
   background: #121212;
   border-radius: 16px;
   margin-bottom: 16px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  transition: 0.2s;
 }
 
-.card:hover {
-  transform: scale(1.01);
-}
-
-/* VIDEO */
 iframe {
   width: 100%;
   height: 220px;
   border: none;
 }
 
-/* INFO */
 .info {
   padding: 12px;
 }
@@ -64,21 +61,21 @@ iframe {
   margin-top: 4px;
 }
 
-/* HIGHLIGHT último video */
-.latest {
-  border: 2px solid #00ff88;
-}
-
-/* badge */
-.badge {
-  position: absolute;
+/* BOTÓN DESCARGA */
+.download {
+  margin-top: 10px;
+  display: inline-block;
   background: #00ff88;
   color: black;
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 10px;
-  top: 10px;
-  left: 10px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+/* highlight */
+.latest {
+  border: 2px solid #00ff88;
 }
 </style>
 </head>
@@ -93,6 +90,27 @@ const API_KEY = "AIzaSyDihD7Bc1KaWhL1f5JhEMYNDGSCM9ZVycI";
 const FOLDER_ID = "1fDE2bE_dC39VU7k_mCTHMYHtmYbKFIJc";
 const TIEMPO_PROCESADO = 10000;
 
+// 🧠 formatear fecha tipo humano
+function tiempoHumano(date) {
+  const ahora = new Date();
+  const d = new Date(date);
+
+  const diff = (ahora - d) / (1000 * 60 * 60 * 24);
+
+  const hora = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+  if (diff < 1 && ahora.getDate() === d.getDate()) {
+    return `Hoy a las ${hora}`;
+  }
+
+  if (diff < 2) {
+    return `Ayer a las ${hora}`;
+  }
+
+  return d.toLocaleDateString() + " " + hora;
+}
+
+// 🚀 cargar videos
 async function loadVideos() {
 
   const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'video/'&key=${API_KEY}&fields=files(id,name,createdTime)`;
@@ -114,49 +132,67 @@ async function loadVideos() {
   render(videosListos);
 }
 
+// 🎬 render
 function render(videos){
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  videos.forEach((v, index) => {
+  let secciones = {};
+
+  videos.forEach(v => {
     let d = new Date(v.createdTime);
-    let time = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    let key;
 
-    let card = document.createElement("div");
-    card.className = "card";
-
-    if(index === 0){
-      card.classList.add("latest");
+    if (new Date().toDateString() === d.toDateString()) {
+      key = "Hoy";
+    } else if ((new Date() - d) < 86400000 * 2) {
+      key = "Ayer";
+    } else {
+      key = d.toLocaleDateString();
     }
 
-    let videoContainer = document.createElement("div");
-    videoContainer.style.position = "relative";
-
-    if(index === 0){
-      let badge = document.createElement("div");
-      badge.className = "badge";
-      badge.innerText = "LIVE";
-      videoContainer.appendChild(badge);
-    }
-
-    let iframe = document.createElement("iframe");
-    iframe.src = `https://drive.google.com/file/d/${v.id}/preview`;
-
-    videoContainer.appendChild(iframe);
-
-    let info = document.createElement("div");
-    info.className = "info";
-
-    info.innerHTML = `
-      <div class="time">🕒 ${time}</div>
-      <div class="name">${v.name}</div>
-    `;
-
-    card.appendChild(videoContainer);
-    card.appendChild(info);
-
-    app.appendChild(card);
+    if (!secciones[key]) secciones[key] = [];
+    secciones[key].push(v);
   });
+
+  for (let section in secciones) {
+
+    let div = document.createElement("div");
+    div.className = "section";
+
+    let title = document.createElement("div");
+    title.className = "section-title";
+    title.innerText = section;
+
+    div.appendChild(title);
+
+    secciones[section].forEach((v, index) => {
+
+      let card = document.createElement("div");
+      card.className = "card";
+
+      if(section === "Hoy" && index === 0){
+        card.classList.add("latest");
+      }
+
+      let info = tiempoHumano(v.createdTime);
+
+      card.innerHTML = `
+        <iframe src="https://drive.google.com/file/d/${v.id}/preview"></iframe>
+        <div class="info">
+          <div class="time">${info}</div>
+          <div class="name">${v.name}</div>
+          <a class="download" href="https://drive.google.com/uc?export=download&id=${v.id}">
+            ⬇ Descargar
+          </a>
+        </div>
+      `;
+
+      div.appendChild(card);
+    });
+
+    app.appendChild(div);
+  }
 }
 
 loadVideos();
@@ -164,3 +200,4 @@ loadVideos();
 
 </body>
 </html>
+
