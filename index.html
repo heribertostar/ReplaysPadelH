@@ -38,20 +38,9 @@ body {
 const API_KEY = "AIzaSyDihD7Bc1KaWhL1f5JhEMYNDGSCM9ZVycI";
 const FOLDER_ID = "1fDE2bE_dC39VU7k_mCTHMYHtmYbKFIJc";
 
-// 🔍 verificar si video está listo
-async function videoListo(id) {
-  try {
-    const res = await fetch(`https://drive.google.com/uc?export=download&id=${id}`, {
-      method: "HEAD"
-    });
+// ⏳ tiempo mínimo para considerar listo (en ms)
+const TIEMPO_PROCESADO = 10000; // 10 segundos
 
-    return res.ok; // true si está listo
-  } catch {
-    return false;
-  }
-}
-
-// 🚀 cargar videos
 async function loadVideos() {
 
   const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'video/'&key=${API_KEY}&fields=files(id,name,createdTime)`;
@@ -63,15 +52,13 @@ async function loadVideos() {
 
   videos.sort((a,b)=> new Date(b.createdTime) - new Date(a.createdTime));
 
-  // 🔥 filtrar SOLO los listos
-  let videosListos = [];
+  const ahora = new Date();
 
-  for (let v of videos) {
-    let listo = await videoListo(v.id);
-    if (listo) {
-      videosListos.push(v);
-    }
-  }
+  // 🔥 FILTRO REAL
+  let videosListos = videos.filter(v => {
+    let creado = new Date(v.createdTime);
+    return (ahora - creado) > TIEMPO_PROCESADO;
+  });
 
   render(videosListos);
 }
