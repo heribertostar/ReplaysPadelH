@@ -2,44 +2,96 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Mis Videos</title>
+<title>Replays</title>
 
 <style>
 body {
-  background: #0b0b0b;
+  margin: 0;
+  background: #0a0a0a;
   color: white;
-  font-family: Arial;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
-.section { margin: 20px; }
+
+/* HEADER tipo app */
+.header {
+  position: sticky;
+  top: 0;
+  background: #0a0a0a;
+  padding: 15px;
+  font-size: 20px;
+  font-weight: bold;
+  border-bottom: 1px solid #222;
+}
+
+/* CONTENEDOR */
+#app {
+  padding: 10px;
+}
+
+/* CARD estilo Grabala */
 .card {
-  background: #1a1a1a;
-  border-radius: 12px;
-  padding: 12px;
-  margin: 12px 0;
+  background: #121212;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  transition: 0.2s;
 }
-.video iframe {
+
+.card:hover {
+  transform: scale(1.01);
+}
+
+/* VIDEO */
+iframe {
   width: 100%;
-  height: 250px;
-  border-radius: 10px;
+  height: 220px;
+  border: none;
 }
+
+/* INFO */
+.info {
+  padding: 12px;
+}
+
 .time {
-  font-size: 14px;
-  opacity: 0.7;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.name {
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+/* HIGHLIGHT último video */
+.latest {
+  border: 2px solid #00ff88;
+}
+
+/* badge */
+.badge {
+  position: absolute;
+  background: #00ff88;
+  color: black;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 10px;
+  top: 10px;
+  left: 10px;
 }
 </style>
-
 </head>
+
 <body>
 
-<h1>🎥 Mis Videos</h1>
+<div class="header">🎾 Replays</div>
 <div id="app"></div>
 
 <script>
 const API_KEY = "AIzaSyDihD7Bc1KaWhL1f5JhEMYNDGSCM9ZVycI";
 const FOLDER_ID = "1fDE2bE_dC39VU7k_mCTHMYHtmYbKFIJc";
-
-// ⏳ tiempo mínimo para considerar listo (en ms)
-const TIEMPO_PROCESADO = 90000; // 10 segundos
+const TIEMPO_PROCESADO = 10000;
 
 async function loadVideos() {
 
@@ -54,7 +106,6 @@ async function loadVideos() {
 
   const ahora = new Date();
 
-  // 🔥 FILTRO REAL
   let videosListos = videos.filter(v => {
     let creado = new Date(v.createdTime);
     return (ahora - creado) > TIEMPO_PROCESADO;
@@ -63,29 +114,51 @@ async function loadVideos() {
   render(videosListos);
 }
 
-// 🎬 render
 function render(videos){
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  videos.forEach(v => {
+  videos.forEach((v, index) => {
     let d = new Date(v.createdTime);
     let time = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
     let card = document.createElement("div");
     card.className = "card";
 
-    card.innerHTML = `
+    if(index === 0){
+      card.classList.add("latest");
+    }
+
+    let videoContainer = document.createElement("div");
+    videoContainer.style.position = "relative";
+
+    if(index === 0){
+      let badge = document.createElement("div");
+      badge.className = "badge";
+      badge.innerText = "LIVE";
+      videoContainer.appendChild(badge);
+    }
+
+    let iframe = document.createElement("iframe");
+    iframe.src = `https://drive.google.com/file/d/${v.id}/preview`;
+
+    videoContainer.appendChild(iframe);
+
+    let info = document.createElement("div");
+    info.className = "info";
+
+    info.innerHTML = `
       <div class="time">🕒 ${time}</div>
-      <div>${v.name}</div>
-      <iframe src="https://drive.google.com/file/d/${v.id}/preview"></iframe>
+      <div class="name">${v.name}</div>
     `;
+
+    card.appendChild(videoContainer);
+    card.appendChild(info);
 
     app.appendChild(card);
   });
 }
 
-// cargar una sola vez
 loadVideos();
 </script>
 
