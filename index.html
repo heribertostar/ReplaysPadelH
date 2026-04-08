@@ -92,6 +92,26 @@ iframe {
     font-size: 24px;
   }
 }
+  .download-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  text-align: center;
+  background: #ff3b30;
+  color: white;
+  border-radius: 12px;
+  font-size: 16px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.download-btn:active {
+  transform: scale(0.97);
+  background: #cc2f26;
+}
+  
 </style>
 </head>
 
@@ -197,7 +217,7 @@ function render(videos){
         <div class="info">
           <div class="time">${info}</div>
           <div class="name">${v.name}</div>
-          <a class="download" href="https://drive.google.com/uc?export=download&id=${v.id}">
+          <a class="download-btn" href="https://drive.google.com/uc?export=download&id=${v.id}">
             ⬇ Descargar
           </a>
         </div>
