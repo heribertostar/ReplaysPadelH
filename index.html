@@ -38,9 +38,20 @@ body {
 const API_KEY = "AIzaSyDihD7Bc1KaWhL1f5JhEMYNDGSCM9ZVycI";
 const FOLDER_ID = "1fDE2bE_dC39VU7k_mCTHMYHtmYbKFIJc";
 
-let ultimoVideo = null;
+// 🔍 verificar si video está listo
+async function videoListo(id) {
+  try {
+    const res = await fetch(`https://drive.google.com/uc?export=download&id=${id}`, {
+      method: "HEAD"
+    });
 
-// 🚀 Cargar videos
+    return res.ok; // true si está listo
+  } catch {
+    return false;
+  }
+}
+
+// 🚀 cargar videos
 async function loadVideos() {
 
   const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+mimeType+contains+'video/'&key=${API_KEY}&fields=files(id,name,createdTime)`;
@@ -50,19 +61,22 @@ async function loadVideos() {
 
   let videos = data.files;
 
-  // Ordenar por fecha DESC
   videos.sort((a,b)=> new Date(b.createdTime) - new Date(a.createdTime));
 
-  // 🔥 SOLO actualizar si hay nuevo video
-  if (videos.length > 0 && videos[0].id !== ultimoVideo) {
-    ultimoVideo = videos[0].id;
-    console.log("🎬 Nuevo replay detectado");
+  // 🔥 filtrar SOLO los listos
+  let videosListos = [];
 
-    render(videos);
+  for (let v of videos) {
+    let listo = await videoListo(v.id);
+    if (listo) {
+      videosListos.push(v);
+    }
   }
+
+  render(videosListos);
 }
 
-// 🎬 Render limpio
+// 🎬 render
 function render(videos){
   const app = document.getElementById("app");
   app.innerHTML = "";
@@ -74,34 +88,17 @@ function render(videos){
     let card = document.createElement("div");
     card.className = "card";
 
-    let loading = document.createElement("div");
-    loading.innerText = "⏳ Procesando video...";
-
-    let iframe = document.createElement("iframe");
-    iframe.src = `https://drive.google.com/file/d/${v.id}/preview`;
-    iframe.style.display = "none";
-
-    iframe.onload = () => {
-      loading.remove();
-      iframe.style.display = "block";
-    };
-
     card.innerHTML = `
       <div class="time">🕒 ${time}</div>
       <div>${v.name}</div>
+      <iframe src="https://drive.google.com/file/d/${v.id}/preview"></iframe>
     `;
-
-    card.appendChild(loading);
-    card.appendChild(iframe);
 
     app.appendChild(card);
   });
 }
 
-// 🔄 revisar cada 5s (pero sin re-render innecesario)
-setInterval(loadVideos, 5000);
-
-// primera carga
+// cargar una sola vez
 loadVideos();
 </script>
 
