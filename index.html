@@ -2,11 +2,15 @@
 <html>
 <head>
 <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
 <title>Replays</title>
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   background: #0a0a0a;
@@ -23,6 +27,7 @@ body {
   font-size: 22px;
   font-weight: bold;
   border-bottom: 1px solid #222;
+  z-index: 10;
 }
 
 /* CONTENEDOR */
@@ -30,20 +35,75 @@ body {
   padding: 12px;
 }
 
+/* SECCIONES */
+.section {
+  margin-bottom: 25px;
+}
+
+.section-title {
+  font-size: 18px;
+  color: #aaa;
+  margin: 10px 5px;
+}
+
+/* 🔥 GRID REAL */
+.section-content {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+/* TABLET */
+@media (min-width: 600px) {
+  .section-content {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* DESKTOP */
+@media (min-width: 1000px) {
+  .section-content {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 /* CARD */
 .card {
   background: #121212;
   border-radius: 18px;
-  margin-bottom: 18px;
   overflow: hidden;
   box-shadow: 0 6px 25px rgba(0,0,0,0.6);
+  transition: 0.2s;
 }
 
-/* VIDEO MÁS GRANDE */
+.card:hover {
+  transform: scale(1.02);
+}
+
+/* VIDEO */
 iframe {
   width: 100%;
-  height: 260px; /* 👈 más grande */
+  height: 240px;
   border: none;
+}
+
+/* MOBILE VIDEO */
+@media (max-width: 600px) {
+  iframe {
+    height: 300px;
+  }
+}
+
+/* DESTACADO */
+.latest iframe {
+  height: 300px;
+}
+
+/* DESKTOP DESTACADO */
+@media (min-width: 1000px) {
+  .latest {
+    grid-column: span 2;
+  }
 }
 
 /* INFO */
@@ -61,89 +121,24 @@ iframe {
   margin-top: 6px;
 }
 
-/* ÚLTIMO VIDEO DESTACADO */
-.latest iframe {
-  height: 320px; /* 👈 MÁS GRANDE */
-}
-
-/* BADGE */
-.badge {
-  position: absolute;
+/* BOTÓN DESCARGA */
+.download-btn {
+  display: block;
+  margin-top: 12px;
+  padding: 12px;
+  text-align: center;
   background: #00ff88;
   color: black;
-  font-size: 13px;
-  padding: 5px 10px;
   border-radius: 12px;
-  top: 10px;
-  left: 10px;
-}
-
-/* 📱 EXTRA PRO MOBILE */
-@media (max-width: 600px) {
-  iframe {
-    height: 300px;
-  }
-
-  .latest iframe {
-    height: 360px;
-  }
-
-  .header {
-    font-size: 24px;
-  }
-}
-  .download-btn {
-  margin-top: 10px;
-  display: inline-block;
-  background: #00ff88;
-  color: black;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
   text-decoration: none;
+  font-weight: bold;
   transition: 0.2s;
 }
 
 .download-btn:active {
-  transform: scale(0.97);
-  background: #cc2f26;
+  transform: scale(0.96);
 }
-
-/* GRID RESPONSIVE */
-#app {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-/* TABLET */
-@media (min-width: 600px) {
-  #app {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-/* DESKTOP */
-@media (min-width: 1000px) {
-  #app {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-}
-
-/* QUE LAS CARDS SE ADAPTEN */
-.card {
-  width: 100%;
-}
-
-/* AJUSTE DE VIDEO EN GRID */
-iframe {
-  height: 200px;
-}
-
-.latest iframe {
-  height: 240px;
-}
-  
 </style>
 </head>
 
@@ -153,17 +148,16 @@ iframe {
 <div id="app"></div>
 
 <script>
-const API_KEY = "AIzaSyDihD7Bc1KaWhL1f5JhEMYNDGSCM9ZVycI";
-const FOLDER_ID = "1fDE2bE_dC39VU7k_mCTHMYHtmYbKFIJc";
+const API_KEY = "TU_API_KEY";
+const FOLDER_ID = "TU_FOLDER_ID";
 const TIEMPO_PROCESADO = 10000;
 
-// 🧠 formatear fecha tipo humano
+// 🧠 tiempo bonito
 function tiempoHumano(date) {
   const ahora = new Date();
   const d = new Date(date);
 
   const diff = (ahora - d) / (1000 * 60 * 60 * 24);
-
   const hora = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
   if (diff < 1 && ahora.getDate() === d.getDate()) {
@@ -231,6 +225,9 @@ function render(videos){
     title.className = "section-title";
     title.innerText = section;
 
+    let content = document.createElement("div");
+    content.className = "section-content";
+
     div.appendChild(title);
 
     secciones[section].forEach((v, index) => {
@@ -255,9 +252,10 @@ function render(videos){
         </div>
       `;
 
-      div.appendChild(card);
+      content.appendChild(card);
     });
 
+    div.appendChild(content);
     app.appendChild(div);
   }
 }
@@ -267,4 +265,3 @@ loadVideos();
 
 </body>
 </html>
-
