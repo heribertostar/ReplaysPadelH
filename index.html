@@ -102,18 +102,31 @@ async function render(grouped){
 
     for (let v of grouped[date]) {
 
-      let listo = await videoListo(v.id);
-
-      if (!listo) continue; // ❌ no mostrar si no está listo
-
       let card = document.createElement("div");
       card.className = "card";
+
+      // 👇 mensaje mientras carga
+      let loading = document.createElement("div");
+      loading.innerText = "⏳ Procesando video...";
+      loading.style.marginBottom = "10px";
+
+      let iframe = document.createElement("iframe");
+      iframe.src = `https://drive.google.com/file/d/${v.id}/preview`;
+      iframe.style.display = "none"; // oculto al inicio
+
+      // 👇 cuando ya carga → mostrar
+      iframe.onload = () => {
+        loading.remove();
+        iframe.style.display = "block";
+      };
 
       card.innerHTML = `
         <div class="time">🕒 ${v.time}</div>
         <div>${v.name}</div>
-        <iframe src="https://drive.google.com/file/d/${v.id}/preview" allow="autoplay"></iframe>
       `;
+
+      card.appendChild(loading);
+      card.appendChild(iframe);
 
       section.appendChild(card);
     }
