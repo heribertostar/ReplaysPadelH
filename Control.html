@@ -29,7 +29,7 @@ button {
 
 <script>
 function guardarReplay() {
-  const ws = new WebSocket("ws://192.168.1.114:4455");
+  const ws = new WebSocket("wss://192.168.1.114:4455");
 
   ws.onopen = () => {
     console.log("Conectado a OBS");
