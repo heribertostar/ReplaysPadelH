@@ -256,7 +256,7 @@ function render(videos){
 
       card.innerHTML = `
         <div class="video-wrapper" onclick="loadVideo(this, '${v.id}')">
-          <img src="https://drive.google.com/thumbnail?id=${v.id}" class="thumb">
+          <object data="avatar.jpg" type="image/jpeg"><img src="https://drive.google.com/thumbnail?id=${v.id}" class="thumb"></object>
           <div class="play">▶</div>
         </div>
 
