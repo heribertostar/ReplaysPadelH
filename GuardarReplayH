@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Replay Control</title>
+
+<style>
+body {
+  background: #111;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+button {
+  font-size:30px;
+  padding:30px 50px;
+  border-radius:20px;
+  background:#ff3b30;
+  color:white;
+  border:none;
+}
+</style>
+
+</head>
+<body>
+
+<button onclick="guardarReplay()">🎬 GUARDAR REPLAY</button>
+
+<script>
+function guardarReplay() {
+  const ws = new WebSocket("ws://192.168.1.114:4455");
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({
+      op: 6,
+      d: {
+        requestType: "SaveReplayBuffer",
+        requestId: "replay1"
+      }
+    }));
+  };
+
+  ws.onerror = () => {
+    alert("❌ No conecta con OBS");
+  };
+
+  ws.onmessage = (msg) => {
+    console.log(msg.data);
+  };
+}
+</script>
+
+</body>
+</html>
