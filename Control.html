@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Replay Control Cancha 1</title>
+
+<style>
+body {
+  background: #111;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:80vh;
+}
+button {
+  font-size:60px;
+  padding:100px 120px;
+  border-radius:20px;
+  background:#ff3b30;
+  color:white;
+  border:none;
+  transition: 0.3s;
+}
+#container {
+  text-align:center;
+}
+
+#status {
+  margin-top:20px;
+  font-size:18px;
+  color:#4caf50;
+}
+  
+</style>
+
+</head>
+<body>
+
+<div id="container">
+  <button id="btn" onclick="guardarReplay()">🎬 GUARDAR REPLAY C1</button>
+  <div id="status"></div>
+</div>
+
+
+
+<script>
+let bloqueado = false;
+let tiempoRestante = 15;
+
+function guardarReplay() {
+
+  if (bloqueado) {
+    return;
+  }
+
+  const btn = document.getElementById("btn");
+  const status = document.getElementById("status");
+
+  bloqueado = true;
+
+
+  // UI feedback
+  btn.style.background = "gray";
+  btn.disabled = true;
+  status.innerText = "⏳ Guardando replay...";
+
+  const ws = new WebSocket("ws://192.168.1.114:4455");
+
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+
+    if (msg.op === 0) {
+
+      ws.send(JSON.stringify({
+        op: 1,
+        d: { rpcVersion: 1 }
+      }));
+
+      setTimeout(() => {
+        ws.send(JSON.stringify({
+          op: 6,
+          d: {
+            requestType: "SaveReplayBuffer",
+            requestId: "req-1"
+          }
+        }));
+
+        // ✅ Confirmación visual
+        status.innerText = "✅ Replay guardado";
+
+      }, 3000);
+      
+      setTimeout(() => {
+      
+
+        // ✅ Borrar TEXTO
+        status.innerText = "";
+
+      }, 8000);
+    }
+  };
+
+  iniciarCooldown();
+}
+
+function iniciarCooldown() {
+  const btn = document.getElementById("btn");
+
+  const interval = setInterval(() => {
+    tiempoRestante--;
+
+    btn.innerText = `⏳ ${tiempoRestante}s`;
+
+    if (tiempoRestante <= 0) {
+      clearInterval(interval);
+
+      bloqueado = false;
+      tiempoRestante = 15;
+
+      btn.innerText = "🎬 GUARDAR REPLAY";
+      btn.style.background = "#ff3b30";
+      btn.disabled = false;
+    }
+  }, 1000);
+}
+</script>
+
+
+
+</body>
+</html>
